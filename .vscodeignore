@@ -1,0 +1,7 @@
+.gitignore
+.vscode/**
+.serena/**
+node_modules/**
+*.log
+*.vsix
+test/**

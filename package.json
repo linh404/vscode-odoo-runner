@@ -1,0 +1,152 @@
+{
+  "name": "vdx-odoo-runner",
+  "displayName": "VDX Odoo Runner",
+  "description": "Portable Run, Debug, Update and Install commands for local Odoo projects.",
+  "version": "0.1.15",
+  "publisher": "vdx",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/linh404/vscode-odoo-runner.git"
+  },
+  "scripts": {
+    "test": "node test/extension.test.js"
+  },
+  "engines": {
+    "vscode": ">=1.103.0"
+  },
+  "categories": [
+    "Other",
+    "Debuggers"
+  ],
+  "keywords": [
+    "odoo",
+    "python",
+    "erp",
+    "debug"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onCommand:vdxOdooRunner.setup",
+    "onCommand:vdxOdooRunner.run",
+    "onCommand:vdxOdooRunner.debug",
+    "onCommand:vdxOdooRunner.updateModule",
+    "onCommand:vdxOdooRunner.updateAddonsFolder",
+    "onCommand:vdxOdooRunner.installModule",
+    "onCommand:vdxOdooRunner.testModule",
+    "onCommand:vdxOdooRunner.testCurrentModule",
+    "onCommand:vdxOdooRunner.generateConfigs",
+    "onCommand:vdxOdooRunner.updateSelectedModule",
+    "onCommand:vdxOdooRunner.refreshModules",
+    "onCommand:vdxOdooRunner.configureRuff",
+    "onCommand:vdxOdooRunner.ruffCheckCurrentFile",
+    "onCommand:vdxOdooRunner.ruffCheckCurrentModule"
+  ],
+  "extensionDependencies": [
+    "ms-python.python",
+    "ms-python.debugpy",
+    "trinhanhngoc.vscode-odoo"
+  ],
+  "contributes": {
+    "commands": [
+      { "command": "vdxOdooRunner.setup", "title": "Odoo: Configure Runner" },
+      { "command": "vdxOdooRunner.run", "title": "Odoo: Run" },
+      { "command": "vdxOdooRunner.debug", "title": "Odoo: Debug" },
+      { "command": "vdxOdooRunner.updateModule", "title": "Odoo: Update Module" },
+      { "command": "vdxOdooRunner.updateAddonsFolder", "title": "Odoo: Update Addons Folder" },
+      { "command": "vdxOdooRunner.installModule", "title": "Odoo: Install Module" },
+      { "command": "vdxOdooRunner.testModule", "title": "Odoo: Test Module" },
+      { "command": "vdxOdooRunner.testCurrentModule", "title": "Odoo: Test Current Module" },
+      { "command": "vdxOdooRunner.generateConfigs", "title": "Odoo: Generate VS Code Configs" },
+      { "command": "vdxOdooRunner.updateSelectedModule", "title": "Odoo: Update Selected Module" },
+      { "command": "vdxOdooRunner.refreshModules", "title": "Odoo: Refresh Modules" },
+      { "command": "vdxOdooRunner.configureRuff", "title": "Ruff: Configure" },
+      { "command": "vdxOdooRunner.ruffCheckCurrentFile", "title": "Ruff: Check Current File" },
+      { "command": "vdxOdooRunner.ruffCheckCurrentModule", "title": "Ruff: Check Current Module" }
+    ],
+    "menus": {
+      "commandPalette": [
+        { "command": "vdxOdooRunner.updateSelectedModule", "when": "false" },
+        { "command": "vdxOdooRunner.refreshModules", "when": "false" }
+      ],
+      "view/title": [
+        { "command": "vdxOdooRunner.setup", "when": "view == vdxOdooRunner.panel", "group": "navigation@1", "icon": "$(settings-gear)" },
+        { "command": "vdxOdooRunner.run", "when": "view == vdxOdooRunner.panel", "group": "navigation@2", "icon": "$(play)" },
+        { "command": "vdxOdooRunner.debug", "when": "view == vdxOdooRunner.panel", "group": "navigation@3", "icon": "$(debug-alt)" },
+        { "command": "vdxOdooRunner.updateModule", "when": "view == vdxOdooRunner.panel", "group": "navigation@4", "icon": "$(sync)" },
+        { "command": "vdxOdooRunner.refreshModules", "when": "view == vdxOdooRunner.panel", "group": "navigation@5", "icon": "$(refresh)" }
+      ],
+      "view/item/context": [
+        { "command": "vdxOdooRunner.updateSelectedModule", "when": "view == vdxOdooRunner.panel && viewItem == module", "group": "inline@1" }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vdxOdooRunner",
+          "title": "Odoo Runner",
+          "icon": "./resources/odoo-runner.svg"
+        }
+      ]
+    },
+    "views": {
+      "vdxOdooRunner": [
+        {
+          "id": "vdxOdooRunner.panel",
+          "name": "Odoo Runner"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "VDX Odoo Runner",
+      "properties": {
+        "odooRunner.pythonPath": {
+          "type": "string",
+          "default": "${workspaceFolder}/.venv/bin/python",
+          "description": "Python interpreter used to run Odoo."
+        },
+        "odooRunner.odooBin": {
+          "type": "string",
+          "default": "${workspaceFolder}/../odoo/odoo-bin",
+          "description": "Path to Odoo's odoo-bin."
+        },
+        "odooRunner.configPath": {
+          "type": "string",
+          "default": "${workspaceFolder}/../odoo/config/${workspaceFolderBasename}.conf",
+          "description": "Path to the Odoo configuration file."
+        },
+        "odooRunner.database": {
+          "type": "string",
+          "default": "",
+          "description": "Default database. Leave empty to ask each time."
+        },
+        "odooRunner.devMode": {
+          "type": "string",
+          "enum": ["", "all", "reload", "xml", "werkzeug"],
+          "default": "",
+          "description": "Odoo --dev mode. Empty is lighter; use all for PyCharm-compatible behavior."
+        },
+        "odooRunner.cwd": {
+          "type": "string",
+          "default": "${workspaceFolder}",
+          "description": "Working directory for Odoo."
+        },
+        "odooRunner.disablePylance": {
+          "type": "boolean",
+          "default": true,
+          "description": "Disable the Python language server for this workspace to avoid duplicate indexing."
+        },
+        "odooRunner.ruffPath": {
+          "type": "string",
+          "default": "${workspaceFolder}/.venv/bin/ruff",
+          "description": "Ruff executable. Configure this when Ruff is not in the project virtual environment or PATH."
+        },
+    "odooRunner.ruffConfigPath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional explicit Ruff config. Empty lets Ruff discover pyproject.toml, ruff.toml or .ruff.toml."
+        }
+      }
+    }
+  }
+}
