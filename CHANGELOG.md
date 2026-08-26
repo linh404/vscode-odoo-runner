@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.16
+
+- Refactor the extension into core, infrastructure, feature and UI modules.
+- Keep the root entrypoint and command IDs stable while making services independently testable.
+- Add focused tests for command building, module discovery and launch configuration.
+
 ## 0.1.15
 
 - Make workspace resolution follow the active editor in multi-root workspaces.

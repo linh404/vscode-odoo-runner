@@ -58,12 +58,22 @@ Commands use the active editor's workspace folder in multi-root workspaces. Modu
 
 Odoo test commands use Odoo's process exit code as the result and do not parse human-readable log summaries. This keeps pass/fail behavior stable across Odoo versions and locales.
 
+## Architecture
+
+- `src/core` contains filesystem-independent path, command and module-discovery logic.
+- `src/infrastructure` adapts VS Code, workspace settings, terminals and generated launch configurations.
+- `src/features` contains the Odoo and Ruff application services.
+- `src/ui` contains the Activity Bar tree provider.
+- `src/extension.js` is the composition root; the root `extension.js` remains a stable VS Code entrypoint.
+
+The services receive VS Code and filesystem dependencies explicitly, so core behavior can be tested without starting an Extension Development Host.
+
 ## Local package
 
 ```bash
 npm install -g @vscode/vsce
 vsce package
-code --install-extension vdx-odoo-runner-0.1.15.vsix
+code --install-extension vdx-odoo-runner-0.1.16.vsix
 ```
 
-Build the current release with `npx @vscode/vsce package`; the generated file is `vdx-odoo-runner-0.1.15.vsix`.
+Build the current release with `npx @vscode/vsce package`; the generated file is `vdx-odoo-runner-0.1.16.vsix`.

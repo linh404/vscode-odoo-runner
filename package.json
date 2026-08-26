@@ -2,7 +2,7 @@
   "name": "vdx-odoo-runner",
   "displayName": "VDX Odoo Runner",
   "description": "Portable Run, Debug, Update and Install commands for local Odoo projects.",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "publisher": "vdx",
   "license": "MIT",
   "repository": {
