@@ -1,79 +1,190 @@
 # VDX Odoo Runner
 
-Portable VS Code commands for local Odoo development.
+VS Code tools for running, debugging, updating, installing, and testing local Odoo projects. The extension also provides Ruff integration and automatic discovery of Odoo modules from the workspace and configured `addons_path` entries.
 
-## Dependencies and prerequisites
+## Features
 
-### Required
+- Run Odoo with a project-specific Python interpreter and configuration file.
+- Start Odoo through the VS Code Python debugger.
+- Update, install, and test one or more Odoo modules.
+- Detect the module associated with the active editor.
+- Update all modules directly inside the active addons directory.
+- Generate `launch.json` configurations for Odoo Run and Debug profiles.
+- Configure Ruff in the project virtual environment.
+- Check the current file or current module with Ruff.
+- Support multi-root workspaces by using the workspace of the active editor.
+- Detect custom addons located outside the workspace root.
+- Preserve existing VS Code launch configurations while replacing only the extension-managed profiles.
 
-- **Visual Studio Code** `1.103.0` or newer.
-- **Python** matching the Odoo project environment. The extension does not install Python or Python packages.
-- **Odoo source checkout** containing `odoo-bin`.
-- **An Odoo config file** (`.conf`/`.cfg`) with the correct `addons_path`, PostgreSQL connection and other runtime options.
-- **A reachable PostgreSQL database** if the selected command uses `-d`, `-i`, `-u` or tests.
-- **A workspace folder** opened at the custom-addons/project root.
+## Requirements
 
-### VS Code extensions
+### Runtime
 
-These dependencies are declared by the extension and VS Code will offer to install them:
+- Visual Studio Code `1.103.0` or later.
+- Python environment compatible with the target Odoo version.
+- An Odoo source checkout containing `odoo-bin`.
+- An Odoo configuration file with a valid `addons_path` and PostgreSQL settings.
+- A reachable PostgreSQL database for commands that use a database, install, update, or test options.
+- A workspace opened in VS Code.
 
-- `ms-python.python` — Python environment and interpreter integration.
-- `ms-python.debugpy` — required only for **Odoo: Debug** and `F5` debugging.
-- `trinhanhngoc.vscode-odoo` — Odoo model/inheritance navigation and completion. It is recommended for Odoo development but is not needed to run the server.
+### Recommended VS Code extensions
 
-If the Odoo IDE extension is installed, the Runner disables the Python language server for this workspace by default to avoid duplicate indexing and reduce RAM usage. Set `odooRunner.disablePylance` to `false` if you want normal Python diagnostics from Pylance.
+The following dependencies are declared by the extension. VS Code can install them automatically:
 
-### Not bundled by this extension
+- [`Python`](https://marketplace.visualstudio.com/items?itemName=ms-python.python) by Microsoft: Python environment and interpreter integration.
+- [`Python Debugger`](https://marketplace.visualstudio.com/items?itemName=ms-python.debugpy) by Microsoft: required for Odoo debugging.
+- [`Odoo IDE`](https://marketplace.visualstudio.com/items?itemName=trinhanhngoc.vscode-odoo): Odoo model and inheritance navigation.
 
-- Odoo Community or Enterprise source code.
-- Python virtual environments or `pip` dependencies.
-- PostgreSQL server, databases or database credentials.
-- Odoo configuration files, addons or filestore data.
+The Odoo IDE extension is recommended but is not required to run Odoo. By default, VDX Odoo Runner disables the Python language server for the workspace to avoid duplicate indexing when the Odoo IDE extension is installed. Set `odooRunner.disablePylance` to `false` to keep the normal Python language server enabled.
 
-You must provide these separately on each machine. The first run uses **Odoo: Configure Runner** to select the Python interpreter, `odoo-bin`, config file, database and dev mode.
+## Installation
 
-## Commands
+### From a VSIX package
 
-- **Odoo: Configure Runner** — choose Python, `odoo-bin`, config, database and dev mode.
-- **Odoo: Run** — start Odoo in the integrated terminal.
-- **Odoo: Debug** — start Odoo with the Python debugger and `justMyCode: false`.
-- **Odoo: Update Module** — choose the current module, select one or more detected modules, or enter module names manually; then run `-u module --stop-after-init`.
-- **Odoo: Update Addons Folder** — detect the `addons_path` containing the active file, collect all addon manifests directly inside it, and run one update for the complete folder.
-- **Odoo: Install Module** — run `-i module --stop-after-init`.
-- **Odoo: Test Module** — run `--test-enable --test-tags module --stop-after-init`.
-- **Odoo: Test Current Module** — detect the module containing the active file and run `--test-enable --test-tags module --stop-after-init` for it.
-- **Odoo: Generate VS Code Configs** — write workspace `launch.json` profiles.
-
-The **Odoo Runner** view is also available from the Activity Bar. It provides direct Run, Debug, Update, Install and Test actions, plus a detected-module list where clicking a module updates it directly.
-
-The same view provides **Configure Ruff**, **Ruff: Check Current File**, **Ruff: Check Current Module** and **Ruff: Refresh**. **Configure Ruff** installs Ruff into the configured project virtual environment and stores its executable path. Ruff activates that environment before running and lets Ruff auto-detect `pyproject.toml`, `ruff.toml` or `.ruff.toml` unless an explicit config is selected.
-
-The extension stores only paths and run preferences in workspace settings. It does not package Odoo source, databases, credentials or virtual environments.
-
-When updating modules, detected modules come from the workspace folder and the configured Odoo `addons_path`. The current module is inferred from the active editor when its parent folder contains `__manifest__.py` or `__openerp__.py`.
-
-The default configuration disables the Python language server for the workspace to avoid duplicate indexing when the Odoo IDE extension is installed. Change `odooRunner.disablePylance` to `false` if normal Python diagnostics are preferred.
-
-Commands use the active editor's workspace folder in multi-root workspaces. Module detection also follows configured external `addons_path` entries, so current-module actions work when custom addons are outside the workspace root.
-
-Odoo test commands use Odoo's process exit code as the result and do not parse human-readable log summaries. This keeps pass/fail behavior stable across Odoo versions and locales.
-
-## Architecture
-
-- `src/core` contains filesystem-independent path, command and module-discovery logic.
-- `src/infrastructure` adapts VS Code, workspace settings, terminals and generated launch configurations.
-- `src/features` contains the Odoo and Ruff application services.
-- `src/ui` contains the Activity Bar tree provider.
-- `src/extension.js` is the composition root; the root `extension.js` remains a stable VS Code entrypoint.
-
-The services receive VS Code and filesystem dependencies explicitly, so core behavior can be tested without starting an Extension Development Host.
-
-## Local package
+Build or download a release package, then install it with the VS Code CLI:
 
 ```bash
-npm install -g @vscode/vsce
-vsce package
 code --install-extension vdx-odoo-runner-0.1.16.vsix
 ```
 
-Build the current release with `npx @vscode/vsce package`; the generated file is `vdx-odoo-runner-0.1.16.vsix`.
+Use `Developer: Reload Window` after replacing an already-installed development build.
+
+### From source
+
+Clone the repository and package the extension locally:
+
+```bash
+git clone https://github.com/linh404/vscode-odoo-runner.git
+cd vscode-odoo-runner
+npm test
+npx @vscode/vsce package --no-dependencies
+code --install-extension vdx-odoo-runner-0.1.16.vsix
+```
+
+The generated VSIX file is ignored by Git and should be treated as a build artifact.
+
+## Quick Start
+
+1. Open the Odoo custom-addons or project directory in VS Code.
+2. Open the **Odoo Runner** view from the Activity Bar.
+3. Run **Odoo: Configure Runner**.
+4. Select the Python interpreter, `odoo-bin`, and Odoo configuration file.
+5. Enter an optional default database and select an Odoo development mode.
+6. Run **Odoo: Run**, **Odoo: Debug**, or another command from the Command Palette or the Odoo Runner view.
+
+The extension stores paths and run preferences in workspace settings. It does not bundle or manage Odoo source code, databases, credentials, filestores, or Python virtual environments.
+
+## Commands
+
+| Command | Description |
+| --- | --- |
+| **Odoo: Configure Runner** | Select the Python interpreter, `odoo-bin`, config file, default database, and development mode. |
+| **Odoo: Run** | Start Odoo in the integrated terminal. |
+| **Odoo: Debug** | Start Odoo with the VS Code Python debugger and `justMyCode: false`. |
+| **Odoo: Update Module** | Update the current module, selected detected modules, or manually entered module names. |
+| **Odoo: Update Addons Folder** | Update every detected module directly inside the addons directory containing the active file. |
+| **Odoo: Install Module** | Install one or more modules with `-i` and `--stop-after-init`. |
+| **Odoo: Test Module** | Run Odoo tests for manually entered module names. |
+| **Odoo: Test Current Module** | Run Odoo tests for the module containing the active file. |
+| **Odoo: Generate VS Code Configs** | Create or update Odoo Run and Debug profiles in `.vscode/launch.json`. |
+| **Ruff: Configure** | Install Ruff in the configured virtual environment and select its configuration file. |
+| **Ruff: Check Current File** | Run `ruff check` for the active file. |
+| **Ruff: Check Current Module** | Run `ruff check` for the active Odoo module. |
+| **Ruff: Refresh** | Refresh the detected module list in the Odoo Runner view. |
+
+Odoo test commands use Odoo's process exit code as the result. They do not parse human-readable test summaries, so the result remains stable across Odoo versions and locales.
+
+## Configuration
+
+Settings are stored under the `odooRunner` configuration namespace. They can be edited in workspace or user settings, or selected through **Odoo: Configure Runner**.
+
+| Setting | Default | Description |
+| --- | --- | --- |
+| `odooRunner.pythonPath` | `${workspaceFolder}/.venv/bin/python` | Python interpreter used to run Odoo. |
+| `odooRunner.odooBin` | `${workspaceFolder}/../odoo/odoo-bin` | Path to Odoo's `odoo-bin`. |
+| `odooRunner.configPath` | `${workspaceFolder}/../odoo/config/${workspaceFolderBasename}.conf` | Odoo configuration file. |
+| `odooRunner.database` | Empty | Default database. An empty value prompts before database operations. |
+| `odooRunner.devMode` | Empty | Odoo `--dev` mode: `all`, `reload`, `xml`, or `werkzeug`. |
+| `odooRunner.cwd` | `${workspaceFolder}` | Working directory used to run Odoo. |
+| `odooRunner.disablePylance` | `true` | Disable the Python language server for the workspace. |
+| `odooRunner.ruffPath` | `${workspaceFolder}/.venv/bin/ruff` | Ruff executable. |
+| `odooRunner.ruffConfigPath` | Empty | Optional explicit Ruff configuration file. Empty enables Ruff's automatic discovery. |
+
+Relative paths are resolved from the active editor's workspace folder. On Windows, the extension also checks the `.venv/Scripts` layout.
+
+## Module Discovery
+
+The extension detects modules from:
+
+- The active editor's workspace folder.
+- Each directory listed in the configured Odoo `addons_path`.
+- External addons directories outside the workspace root.
+
+A directory is treated as an Odoo module when it contains either `__manifest__.py` or the legacy `__openerp__.py`. The module title is read from the manifest's `name` field when available.
+
+## Architecture
+
+The codebase is organized by responsibility:
+
+```text
+extension.js                  # Stable VS Code entrypoint
+src/
+├── core/                      # Pure path, command, and discovery logic
+├── infrastructure/            # VS Code, settings, terminal, and file adapters
+├── features/                  # Odoo and Ruff application services
+└── ui/                        # Activity Bar tree provider
+```
+
+`src/extension.js` is the composition root. The root `extension.js` remains a stable adapter for the VS Code extension host. Core modules are designed to be tested without starting an Extension Development Host.
+
+## Development
+
+Run the test suite:
+
+```bash
+npm test
+```
+
+Check JavaScript syntax:
+
+```bash
+node --check extension.js
+```
+
+Package the extension:
+
+```bash
+npx @vscode/vsce package --no-dependencies
+```
+
+The test suite covers command construction, shell quoting, module discovery, launch configuration generation, and extension activation wiring.
+
+## Troubleshooting
+
+### Runner cannot find Python, Odoo, or the config file
+
+Run **Odoo: Configure Runner** and select each path manually. Confirm that the selected files exist and that the configuration file is readable.
+
+### No modules are detected
+
+Confirm that the active file is inside a directory containing `__manifest__.py` or `__openerp__.py`. Also check that every configured `addons_path` exists and is separated correctly in the Odoo configuration file.
+
+### Debugging does not start
+
+Install the Microsoft Python Debugger extension and verify that the selected interpreter belongs to the Odoo environment. The Runner stops its managed Odoo terminal before starting a debug session.
+
+### Ruff cannot be configured
+
+Confirm that the configured Python environment has a working `pip` installation and network or package-index access. **Ruff: Configure** installs Ruff with `python -m pip install ruff`.
+
+### Changes are not visible after installing a development VSIX
+
+Run `Developer: Reload Window`, or uninstall the existing `VDX Odoo Runner` installation before installing the new package.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+## Repository
+
+Source code and issue tracking are available at [github.com/linh404/vscode-odoo-runner](https://github.com/linh404/vscode-odoo-runner).
