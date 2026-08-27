@@ -11,7 +11,7 @@ function activate(context) {
   let provider;
   const refresh = () => provider?.refresh();
   const odoo = new OdooRunner(vscode, workspace, terminal, refresh);
-  const ruff = new RuffRunner(vscode, workspace, terminal, refresh);
+  const ruff = new RuffRunner(vscode, workspace, terminal, refresh, { configureRunner: () => odoo.configure() });
   const commands = {
     "vdxOdooRunner.setup": () => odoo.configure(),
     "vdxOdooRunner.run": () => odoo.run(),
@@ -19,6 +19,7 @@ function activate(context) {
     "vdxOdooRunner.updateModule": () => odoo.oneShot("update"),
     "vdxOdooRunner.updateAddonsFolder": () => odoo.updateAddonsFolder(),
     "vdxOdooRunner.installModule": () => odoo.oneShot("install"),
+    "vdxOdooRunner.installCurrentModule": () => odoo.installCurrentModule(),
     "vdxOdooRunner.testModule": () => odoo.oneShot("test"),
     "vdxOdooRunner.testCurrentModule": () => odoo.testCurrentModule(),
     "vdxOdooRunner.generateConfigs": () => odoo.generateConfigs(),

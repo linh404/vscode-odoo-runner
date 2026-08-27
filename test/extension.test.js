@@ -8,6 +8,7 @@ const { baseArgs, commandLine, legacyOdooRunCommandLine } = require("../src/core
 const { discoverModulesInPath, findCurrentModule } = require("../src/core/module-discovery");
 const { debugConfiguration, writeLaunchConfigs } = require("../src/infrastructure/launch-config");
 const { normalizeModules } = require("../src/features/odoo/odoo-runner");
+const { TerminalManager } = require("../src/infrastructure/terminal-manager");
 
 const registeredCommands = [];
 const vscodeStub = {
@@ -44,8 +45,9 @@ const extension = require("../src/extension");
 const activationContext = { subscriptions: [] };
 extension.activate(activationContext);
 Module._load = originalLoad;
-assert.strictEqual(registeredCommands.length, 14);
-assert.strictEqual(activationContext.subscriptions.length, 17);
+assert.strictEqual(registeredCommands.length, 15);
+assert.strictEqual(activationContext.subscriptions.length, 18);
+assert.ok(registeredCommands.includes("vdxOdooRunner.installCurrentModule"));
 
 assert.deepStrictEqual(normalizeModules(" a, b, ,a "), "a,b,a");
 assert.strictEqual(normalizeModules("  ,  "), undefined);
@@ -65,6 +67,30 @@ const settings = {
 };
 assert.ok(commandLine(settings).includes("/tmp/odoo-bin"));
 assert.ok(legacyOdooRunCommandLine(settings).includes("/tmp/python"));
+
+let commandTerminalOptions;
+let commandTerminalText;
+const commandTerminal = new TerminalManager(
+  {
+    window: {
+      createTerminal(options) {
+        commandTerminalOptions = options;
+        return {
+          show() {},
+          sendText(command) { commandTerminalText = command; },
+          dispose() {},
+        };
+      },
+    },
+  },
+  { root: () => "/tmp" },
+);
+commandTerminal.showCommand({ cwd: "/tmp/project" }, "Ruff: Check Current Module", "ruff check module");
+assert.deepStrictEqual(commandTerminalOptions, {
+  name: "Ruff: Check Current Module",
+  cwd: "/tmp/project",
+});
+assert.strictEqual(commandTerminalText, "ruff check module");
 assert.deepStrictEqual(debugConfiguration({ ...settings, cwd: "/tmp" }, "Odoo: Debug"), {
   name: "Odoo: Debug",
   type: "debugpy",

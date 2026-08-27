@@ -71,6 +71,7 @@ async function applyWorkspaceSettings(vscode, context, values) {
   const paths = [...new Set([...(Array.isArray(extra) ? extra : []), "${workspaceFolder}", path.dirname(values.odooBin || "")])];
   await cfg.update("python.analysis.extraPaths", paths.filter(Boolean), target);
   if (values.disablePylance) await cfg.update("python.languageServer", "None", target);
+  else await cfg.update("python.languageServer", undefined, target);
 }
 
 module.exports = { applyWorkspaceSettings, getRuffSettings, getSettings, isValid };

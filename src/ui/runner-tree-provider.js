@@ -41,6 +41,7 @@ class RunnerTreeProvider {
       ["Update Module", "vdxOdooRunner.updateModule", "sync"],
       ["Update Addons Folder", "vdxOdooRunner.updateAddonsFolder", "package"],
       ["Install Module", "vdxOdooRunner.installModule", "add"],
+      ["Install Current Module", "vdxOdooRunner.installCurrentModule", "add"],
       ["Test Module", "vdxOdooRunner.testModule", "beaker"],
       ["Test Current Module", "vdxOdooRunner.testCurrentModule", "beaker"],
       ["Configure Ruff", "vdxOdooRunner.configureRuff", "settings-gear"],

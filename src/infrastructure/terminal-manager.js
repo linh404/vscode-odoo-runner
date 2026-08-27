@@ -29,6 +29,16 @@ class TerminalManager {
     this.terminal.show(true);
   }
 
+  showCommand(settings, name, command) {
+    this.stop();
+    this.terminal = this.vscode.window.createTerminal({
+      name,
+      cwd: settings.cwd || this.context.root(),
+    });
+    this.terminal.show(true);
+    this.terminal.sendText(command, true);
+  }
+
   showOdooRun(settings, command) {
     if (!this.terminal || this.terminal.exitStatus) {
       this.terminal = this.vscode.window.createTerminal({ name: "Odoo: Run", cwd: settings.cwd || this.context.root() });

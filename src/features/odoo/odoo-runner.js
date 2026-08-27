@@ -1,9 +1,10 @@
 const fs = require("fs");
 const path = require("path");
-const { applyWorkspaceSettings, getSettings, isValid } = require("../../infrastructure/runner-settings");
+const { applyWorkspaceSettings, getRuffSettings, getSettings, isValid } = require("../../infrastructure/runner-settings");
 const { discoverModules, discoverModulesInPath, findCurrentAddonsPath } = require("../../core/module-discovery");
 const { baseArgs, commandLine, legacyOdooRunCommandLine, testCommandLine } = require("../../core/command-builder");
 const { writeLaunchConfigs } = require("../../infrastructure/launch-config");
+const { createConfigurationPanel } = require("../../ui/configuration-panel");
 
 function normalizeModules(value) {
   const modules = String(value || "")
@@ -32,7 +33,7 @@ class OdooRunner {
   }
 
   async ensureSettings() {
-    const current = this.settings();
+    const current = { ...getRuffSettings(this.vscode, this.workspace, this.fs), ...this.settings() };
     if (isValid(current, this.fs)) return current;
     const setup = await this.vscode.window.showInformationMessage(
       "VDX Odoo Runner needs its paths configured.",
@@ -114,34 +115,59 @@ class OdooRunner {
       return false;
     }
     const current = this.settings();
-    const pythonPath = await this.pickPath("Python interpreter", [
-      current.pythonPath,
-      this.path.join(root, ".venv", "bin", "python"),
-      this.path.join(root, "venv", "bin", "python"),
-      this.path.join(root, ".venv", "Scripts", "python.exe"),
-      this.path.join(root, "venv", "Scripts", "python.exe"),
-    ], { Python: ["python", "python3"] });
-    if (!pythonPath) return false;
-    const odooBin = await this.pickPath("Odoo odoo-bin", [current.odooBin, ...this.discoverOdooBins(root)], { Odoo: ["odoo-bin"] });
-    if (!odooBin) return false;
-    const configPath = await this.pickPath("Odoo config", [current.configPath, ...this.discoverConfigs(root, this.workspace.expand(odooBin))], { Config: ["conf", "cfg"] });
-    if (!configPath) return false;
-    if (![pythonPath, odooBin, configPath].every((value) => this.fs.existsSync(this.workspace.expand(value)))) {
-      this.vscode.window.showErrorMessage("One selected path does not exist. Run Configure Runner again and choose a detected file.");
+    return new Promise((resolve) => {
+      let settled = false;
+      const panel = createConfigurationPanel(this.vscode, current, {
+        onSave: async (values) => {
+          const result = await this.saveConfiguration(values);
+          if (!result || settled) return;
+          settled = true;
+          panel.dispose();
+          resolve(true);
+        },
+        onCancel: () => {
+          if (settled) return;
+          settled = true;
+          resolve(false);
+        },
+      });
+    });
+  }
+
+  async saveConfiguration(values) {
+    const root = this.workspace.root();
+    const pythonPath = this.workspace.expand(String(values.pythonPath || "").trim());
+    const odooBin = this.workspace.expand(String(values.odooBin || "").trim());
+    const configPath = this.workspace.expand(String(values.configPath || "").trim());
+    const cwd = this.workspace.expand(String(values.cwd || "").trim()) || root;
+    const ruffPath = String(values.ruffPath || "").trim() || "ruff";
+    const ruffConfigPath = this.workspace.expand(String(values.ruffConfigPath || "").trim()) || "";
+    if (!pythonPath || !odooBin || !configPath || ![pythonPath, odooBin, configPath].every((value) => this.fs.existsSync(value))) {
+      this.vscode.window.showErrorMessage("Python, odoo-bin, and Odoo config must point to existing files.");
       return false;
     }
-    const database = await this.vscode.window.showInputBox({ prompt: "Default database (leave empty to ask each run)", value: current.database || "", ignoreFocusOut: true });
-    if (database === undefined) return false;
-    const devMode = await this.vscode.window.showQuickPick(["", "all", "reload", "xml", "werkzeug"], { placeHolder: "Select Odoo dev mode (empty is lightest)", canPickMany: false });
-    if (devMode === undefined) return false;
+    if (cwd && !this.fs.existsSync(cwd)) {
+      this.vscode.window.showErrorMessage("Working directory must point to an existing folder.");
+      return false;
+    }
+    if (ruffConfigPath && !this.fs.existsSync(ruffConfigPath)) {
+      this.vscode.window.showErrorMessage("Ruff configuration must point to an existing file.");
+      return false;
+    }
+    const devModes = ["", "all", "reload", "xml", "werkzeug"];
+    const devMode = devModes.includes(values.devMode) ? values.devMode : "";
     const cfg = this.vscode.workspace.getConfiguration("odooRunner", this.workspace.resource());
     const target = this.vscode.ConfigurationTarget.Workspace;
     await cfg.update("pythonPath", pythonPath, target);
     await cfg.update("odooBin", odooBin, target);
     await cfg.update("configPath", configPath, target);
-    await cfg.update("database", database, target);
+    await cfg.update("database", String(values.database || "").trim(), target);
     await cfg.update("devMode", devMode, target);
-    await applyWorkspaceSettings(this.vscode, this.workspace, { pythonPath, odooBin, disablePylance: current.disablePylance });
+    await cfg.update("cwd", cwd || "", target);
+    await cfg.update("disablePylance", Boolean(values.disablePylance), target);
+    await cfg.update("ruffPath", ruffPath, target);
+    await cfg.update("ruffConfigPath", ruffConfigPath, target);
+    await applyWorkspaceSettings(this.vscode, this.workspace, { pythonPath, odooBin, disablePylance: Boolean(values.disablePylance) });
     await this.generateConfigs(this.settings());
     this.onRefresh();
     this.vscode.window.showInformationMessage("VDX Odoo Runner configured for this workspace.");
@@ -216,6 +242,12 @@ class OdooRunner {
     const current = this.workspace.currentModule();
     if (!current) return this.vscode.window.showErrorMessage("Open a file inside an Odoo module before running its tests.");
     await this.oneShot("test", current.name);
+  }
+
+  async installCurrentModule() {
+    const current = this.workspace.currentModule();
+    if (!current) return this.vscode.window.showErrorMessage("Open a file inside an Odoo module before installing it.");
+    await this.oneShot("install", current.name);
   }
 
   async generateConfigs(settings) {

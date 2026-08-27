@@ -63,14 +63,18 @@ code --install-extension vdx-odoo-runner-0.1.16.vsix
 
 The generated VSIX file is ignored by Git and should be treated as a build artifact.
 
+## Documentation
+
+- [Usage guide](docs/USAGE.md): setup, GUI configuration, Odoo/Ruff commands, module discovery and troubleshooting.
+- [Odoo config template](docs/odoo.conf.template): starting point for a local Odoo `.conf` file.
+
 ## Quick Start
 
 1. Open the Odoo custom-addons or project directory in VS Code.
 2. Open the **Odoo Runner** view from the Activity Bar.
-3. Run **Odoo: Configure Runner**.
-4. Select the Python interpreter, `odoo-bin`, and Odoo configuration file.
-5. Enter an optional default database and select an Odoo development mode.
-6. Run **Odoo: Run**, **Odoo: Debug**, or another command from the Command Palette or the Odoo Runner view.
+3. Run **Odoo: Configure Runner** to open the graphical configuration form.
+4. Choose the Python interpreter, `odoo-bin`, Odoo configuration file, working directory, database, development mode, Ruff executable, and optional Ruff config, then click **Save Configuration**.
+5. Run **Odoo: Run**, **Odoo: Debug**, or another command from the Command Palette or the Odoo Runner view.
 
 The extension stores paths and run preferences in workspace settings. It does not bundle or manage Odoo source code, databases, credentials, filestores, or Python virtual environments.
 
@@ -84,6 +88,7 @@ The extension stores paths and run preferences in workspace settings. It does no
 | **Odoo: Update Module** | Update the current module, selected detected modules, or manually entered module names. |
 | **Odoo: Update Addons Folder** | Update every detected module directly inside the addons directory containing the active file. |
 | **Odoo: Install Module** | Install one or more modules with `-i` and `--stop-after-init`. |
+| **Odoo: Install Current Module** | Install the module containing the active file with `-i` and `--stop-after-init`. |
 | **Odoo: Test Module** | Run Odoo tests for manually entered module names. |
 | **Odoo: Test Current Module** | Run Odoo tests for the module containing the active file. |
 | **Odoo: Generate VS Code Configs** | Create or update Odoo Run and Debug profiles in `.vscode/launch.json`. |
@@ -132,7 +137,9 @@ src/
 ├── core/                      # Pure path, command, and discovery logic
 ├── infrastructure/            # VS Code, settings, terminal, and file adapters
 ├── features/                  # Odoo and Ruff application services
-└── ui/                        # Activity Bar tree provider
+└── ui/                        # VS Code UI components
+    ├── configuration-panel.js # Graphical runner configuration form
+    └── runner-tree-provider.js
 ```
 
 `src/extension.js` is the composition root. The root `extension.js` remains a stable adapter for the VS Code extension host. Core modules are designed to be tested without starting an Extension Development Host.

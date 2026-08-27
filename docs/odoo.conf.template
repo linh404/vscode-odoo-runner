@@ -1,0 +1,33 @@
+; Copy this file to your Odoo config directory, rename it (for example,
+; my-project.conf), and replace every placeholder with a real value.
+; The extension does not create databases or manage credentials for you.
+
+[options]
+
+; Required by Odoo for administrative operations. Use a strong local value.
+admin_passwd = CHANGE_ME
+
+; PostgreSQL connection. Use False when PostgreSQL uses local defaults.
+db_host = 127.0.0.1
+db_port = 5432
+db_user = odoo
+db_password = CHANGE_ME
+
+; Comma-separated absolute paths. Put custom addons after the Odoo addons.
+; Example:
+; /home/me/src/odoo/addons,/home/me/src/my-project/addons
+addons_path = /absolute/path/to/odoo/addons,/absolute/path/to/project/addons
+
+; HTTP and logging defaults for local development.
+http_port = 8069
+log_level = info
+logfile = /absolute/path/to/project/odoo.log
+
+; Keep workers at zero for the normal development server.
+workers = 0
+
+; Optional development limits. Uncomment and adjust when needed.
+; limit_time_cpu = 600
+; limit_time_real = 1200
+; without_demo = all
+

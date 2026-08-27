@@ -15,6 +15,7 @@ class RuffRunner {
     this.terminal = terminal;
     this.onRefresh = onRefresh;
     this.fs = dependencies.fs || fs;
+    this.configureRunner = dependencies.configureRunner;
   }
 
   settings() {
@@ -49,6 +50,8 @@ class RuffRunner {
       this.vscode.window.showErrorMessage(`Ruff installation completed, but ${ruffPath} was not found.`);
       return false;
     }
+    if (this.configureRunner) return this.configureRunner();
+
     const configs = discoverRuffConfigs(root, this.workspace.currentModule()?.path, this.fs);
     const choices = [
       { label: "$(search) Let Ruff auto-detect configuration", description: "Use pyproject.toml, ruff.toml or .ruff.toml from the file hierarchy", path: "" },
@@ -86,7 +89,7 @@ class RuffRunner {
     const label = scope === "file" ? "Current File" : "Current Module";
     if (!target || !this.fs.existsSync(target)) return this.vscode.window.showErrorMessage(scope === "file" ? "Open and save a Python file before running Ruff." : "Open a file inside an Odoo module before running Ruff.");
     const settings = this.settings();
-    this.terminal.showShell(settings, `Ruff: Check ${label}`, ruffCommandLine(settings, [target]));
+    this.terminal.showCommand(settings, `Ruff: Check ${label}`, ruffCommandLine(settings, [target]));
   }
 }
 
